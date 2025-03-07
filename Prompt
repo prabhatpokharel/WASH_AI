@@ -1,0 +1,139 @@
+I am rewriting all the propmpts from the begining: 
+
+
+1. I am building an application, so I would like to take your help, help me build codebased based on my instructions.
+2. This application is a python web based application, it should be modular.
+3. First create a webserver using python. 
+4. Create a frontend webpage for login. It should use sqlite database, create a DB named NWASH_VALIDATION, add admin user and it password as Admin@12345. Similarly add a table for users that can access the web interace and login into the application. Add username, password, email, phone, Full Name and Department as the columns.
+5. Once the user logs in, the home page should show the name of the user and the department and the logout option (user standard design priciples for designing this part), Keep other standard logic such as message for successful login and failed login. I am not giving you detailed instructions.
+6. Make sure you sepeare the fronend and backend part of the code. 
+
+7. Now make sure that the admin user can login to the web interface as well, this will be the super user for the overall application, who can also add, edit and remove other users. 
+8. This means you need to add one more column that says permission, the permission of this admin user would me administrator.
+9. Once this user logs in as this user is administrator in his/her home folder provide an option to add new users and set permissions. There will be only two permissions avaialble for now (administrator and operator) we may add new permissions in future, the operator can not add, edit and remove users, so the this part of the applicaiton should not be visible for operators. Update the initialize_db logic to work even of the users table is already present to append the new column.
+10. By default all the users should go to their own home page. In case of admin the home page should show the admin_dashboard from where the admin can create, edit or delete users.
+11. Manage sessions properly.
+12. Redirect the the desired pages as required. If user is logged out, users should be redirected to the login page.
+13. I (as admin) can't find a way to edit or delete other users within http://127.0.0.1:5000/admin-dashboard
+
+
+14. Create UI on the home dashboard that shows the following parts:
+	1. User details (Full name and the department on the top)
+	2. Logout option on the right
+	3. Account edit option below the logout option on the right or use standard minimalist design choice.
+	4. Now seperate the whole remaining window into 2 parts:
+	 (a) On the left side 20% of the screen, show the option to upload a *.swmz file validation logic both on client side as well on the backend. Once the file is uploaded it will save the file in a folder in the root directory of the project named as raw_data. Also, we need to create a table raw_data in our database, as soon as the file is uploaded an entry should be made in the raw_data table, with the following information. name of the file, user who uploaded the file, and date-time. So, it means that there will be four columns in raw_data table (uploaded_file_number, file_name, user, status, date_time) uploaded_file_number is an incremental field. stauts field will show if the file has been extracted or not. As soon as the file is uploaded in the raw_data folder and the entry is made in the table, the extraction funciton will be called, I will share the code for it, the extracted files should be saved in a folder named as extracted_data in the root directory. Once the extraction is completed the status field will show extracted else not_extracted. 
+
+	import zipfile
+	import os
+	import glob
+
+	# Define the folder where the .swmz files are located
+	raw_data_folder = './data'
+	extracted_data_folder = './extracted_data'
+
+	# Search for all .swmz files in the data folder
+	swmz_files = glob.glob(os.path.join(data_folder, '*.swmz'))
+
+	# Ensure there is at least one .swmz file to process
+	if len(swmz_files) == 0:
+	    print(f"No .swmz files found in {data_folder}")
+	else:
+	    # Select the first .swmz file
+	    zip_filename = swmz_files[0]
+	    print(f"Processing file: {zip_filename}")
+	    
+	    # Create the output folder if it doesn't exist
+	    os.makedirs(output_folder, exist_ok=True)
+
+	    # Uncompress the .swmz (zip) file
+	    with zipfile.ZipFile(zip_filename, 'r') as zipf:
+	        # Extract all the contents into the output folder
+	        zipf.extractall(output_folder)
+
+	    # Final confirmation message
+	    print(f"'{zip_filename}' has been uncompressed into '{output_folder}'")
+
+
+15.
+
+
+
+
+
+
+
+
+Steps to Create requirements.txt
+Activate Your Virtual Environment
+
+bash
+Copy code
+source venv/bin/activate   # On macOS/Linux
+venv\Scripts\activate      # On Windows
+Install Dependencies Install the packages you need for your application, such as Flask, Werkzeug, etc.
+
+bash
+Copy code
+pip install flask
+pip install werkzeug
+
+
+
+SQL Commands:
+
+sqlite3 NWASH_VALIDATION.db
+
+
+
+And this is the schema of the tables in the database:
+
+sqlite> PRAGMA table_info(users);
+0|id|INTEGER|0||1
+1|username|TEXT|1||0
+2|password|TEXT|1||0
+3|email|TEXT|1||0
+4|phone|TEXT|1||0
+5|full_name|TEXT|1||0
+6|department|TEXT|1||0
+7|permission|TEXT|0|'operator'|0
+8|file_name|TEXT|0||0
+sqlite> PRAGMA table_info(owners);
+0|uploaded_owner_number|INTEGER|0||1
+1|file|TEXT|1||0
+2|users|TEXT|1||0
+3|date_time|DATETIME|0|CURRENT_TIMESTAMP|0
+sqlite> PRAGMA table_info(raw_data);
+0|id|INTEGER|0||1
+1|file_name|TEXT|1||0
+2|user|TEXT|1||0
+3|status|TEXT|0|'not_extracted'|0
+4|date_time|DATETIME|0|CURRENT_TIMESTAMP|0
+sqlite> PRAGMA table_info(saved_data);
+0|saved_file_number|INTEGER|0||1
+1|file_name|TEXT|1||0
+2|user|TEXT|1||0
+3|status|TEXT|0|'saved'|0
+4|date_time|DATETIME|0|CURRENT_TIMESTAMP|0
+sqlite> PRAGMA table_info(pushed_data);
+0|saved_file_number|INTEGER|0||1
+1|file_name|TEXT|1||0
+2|user|TEXT|1||0
+3|status|TEXT|0|'pushed'|0
+4|date_time|DATETIME|0|CURRENT_TIMESTAMP|0
+
+
+The boxes in red/pink and oranges and the text in the tags <> specify various sections in the home.html page whihc is the main page or home page or dashboard page.
+Based on the the prompts given above for NWASH_VALIDATION_APP.
+
+I have the following requirement:
+
+1. The rows shown in top table section and the fine names should come from the owners table, meaning as soon as the file is successfully updloaded it should be first create an entry in raw_data table and the correspoding owners table. (most of this feature is already implemented, if not please improve)
+2. On clicking any of the file_name in top table, the bottom table should be populated using the corresponding json and the file_name should be saved in the users table. By default the value will be empty, if user clicks another file in the top table, the record in the users table should be updated. So everytime the home.html page is loaded, the bottom table should look for information in the users table for the file_name, if present the corresponding json should be read to populated the desired fields (this part is already done, use the same logic)
+3. There is a toggle (expand/collapse) button between Dashaboard 1 and Dashboard 2, the state should be saved for the user (this has already been implemented) 
+4. There should be an option to share the file to other users in the users table, meaning if admin user is the owner he/she can transfer or share ownership with other users, this will update the owners table, add an option on action column to share the file to other users, if that is done the other user will also be able to view the file and populte the bottom table accordingly (if he/she clicks it), meaning all the behavior will be same after sharing. Give a drop down option that shows all users in the users table list. for selection, also the shared file can be unshared by the original user, the first record (in the user column) in the owners table can only share and unshare to other users, the other users can't do that. This user is the one who uploaded the file. 
+
+5. The tap contition should be a drop down field with 4 options instead of existing text field (the values are: (Good, Major maintenance, Minor Maintenance, Reconstruction)
+
+6. The user can either section the value from the tap condition table using the drop down or there will be a button to approve values in the AI Tap Condition table, the whole cell can be clickable that would make the chage in the Tap Condition table (meaning the value in the AI Tap Condition will be updated), if the user clicks next time, it will be set to original (as that in the JSON). 
+

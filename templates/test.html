@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Test</title>
+</head>
+<body>
+    <h1>Test URL</h1>
+    <form method="POST" action="/">
+        <label for="url">Enter URL:</label>
+        <input type="url" id="url" name="url" placeholder="Enter the URL" required>
+        <button type="submit">Test</button>
+    </form>
+
+    {% if project_info %}
+    <h2>Project Information</h2>
+    <div>
+        <p><strong>Project Code:</strong> {{ project_info.ProjectCode }}</p>
+        <p><strong>Project Name:</strong> {{ project_info.ProjectName }}</p>
+        <p><strong>Project Type:</strong> {{ project_info.ProjectType }}</p>
+        <p><strong>District Code:</strong> {{ project_info.DistrictCode }}</p>
+        <p><strong>Municipality Code:</strong> {{ project_info.MunicipalityCode }}</p>
+        <p><strong>Wards:</strong> {{ project_info.Wards }}</p>
+        <p><strong>Settlement Name:</strong> {{ project_info.SettlementName }}</p>
+        <p><strong>Construction Year:</strong> {{ project_info.ConstructionYear }}</p>
+    </div>
+    {% endif %}
+
+    {% if taps %}
+    <h2>Tap Data</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Tap No</th>
+                <th>Tap Condition</th>
+                <th>Photo</th>
+                <th>AI Tap Condition</th>
+                <th>AI Predictions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for tap in taps %}
+            <tr>
+                <td>{{ tap['Tap No'] }}</td>
+                <td>{{ tap['Tap Condition'] }}</td>
+                <td><img src="{{ tap['Photo'] }}" alt="Tap Photo" style="width:100px;"></td>
+                <td>{{ tap['AI Tap Condition'] }}</td>
+                <td>{{ tap['AI Predictions'] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    {% endif %}
+</body>
+</html>

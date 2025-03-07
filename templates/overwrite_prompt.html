@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Overwrite Confirmation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='overwrite_prompt.css') }}">
+</head>
+<body>
+    <div class="prompt-container">
+        <h1>Overwrite Confirmation</h1>
+        <p>{{ message }}</p>
+        <form method="POST" action="/overwrite-file">
+            <!-- Pass the file name -->
+            <input type="hidden" name="file_name" value="{{ file_name }}">
+            <div class="button-group">
+                <!-- Confirm Overwrite -->
+                <button type="submit" class="btn btn-danger">Yes, Overwrite</button>
+                <!-- Cancel Overwrite -->
+                <button type="button" class="btn btn-success" onclick="window.location.href='/home'">No, Cancel</button>
+            </div>
+        </form>
+    </div>
+</body>
+</html>

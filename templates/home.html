@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Dashboard</title>
+
+    <!-- FontAwesome for Icons -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    
+<!-- style part in home  -->
+
+
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggleButton = document.getElementById("panel-toggle");
+        const topSection = document.getElementById("top-section");
+        const dashboardContent = document.getElementById("dashboard-content");
+        const selectedFileData = {{ selected_file_data | tojson | safe }};
+
+        if (selectedFileData) {
+            populateDashboard(selectedFileData);
+        }
+
+        // Restore panel state from localStorage on page load
+        const panelState = localStorage.getItem("panelState");
+        if (panelState === "collapsed") {
+            topSection.style.display = "none";
+            toggleButton.innerHTML = "☰";
+        } else {
+            topSection.style.display = "block";
+            toggleButton.innerHTML = "☰";
+        }
+
+        // Toggle panel and save state
+        toggleButton.addEventListener("click", () => {
+            if (topSection.style.display === "none") {
+                // Expand
+                topSection.style.display = "block";
+                toggleButton.innerHTML = "☰";
+                localStorage.setItem("panelState", "expanded");
+            } else {
+                // Collapse
+                topSection.style.display = "none";
+                toggleButton.innerHTML = "☰";
+                localStorage.setItem("panelState", "collapsed");
+            }
+        });
+
+        
+
+        // Fetch overview data dynamically
+            fetchOverviewData();
+        });
+
+        function fetchOverviewData() {
+            fetch("/get-overview-data")
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("uploadedCount").textContent = data.uploaded || 0;
+                    document.getElementById("workingCount").textContent = data.working || 0;
+                    document.getElementById("completedCount").textContent = data.completed || 0;
+                    document.getElementById("totalCount").textContent = data.total || 0;
+                })
+                .catch(error => console.error("Error fetching overview data:", error));
+        }
+
+
+        function loadJson(fileName) {
+            console.log("Loading JSON for file:", fileName); // Debug log
+
+            // Save the selected file for the user
+            fetch('/save-file', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ file_name: fileName }),
+            })
+                .then((response) => {
+                    console.log("Response from /save-file:", response); // Debug log
+                    if (!response.ok) {
+                        throw new Error('Failed to save selected file for user.');
+                    }
+                    return response.json();
+                })
+                .then((saveData) => {
+                    console.log("Save file success:", saveData); // Debug log
+
+                    // Fetch the JSON data for the selected file
+                    return fetch(`/get-json/${fileName}`);
+                })
+                .then((response) => {
+                    if (!response.ok) {
+                        throw new Error('Failed to fetch file data.');
+                    }
+                    return response.json();
+                })
+                .then((jsonData) => {
+                    console.log("Fetched JSON data:", jsonData); // Debug log
+                    // Populate the bottom table with the fetched JSON data
+                    populateDashboard(jsonData);
+                })
+                .catch((error) => {
+                    console.error('Error in loadJson:', error); // Debug log
+                });
+        }
+
+
+
+                function populateDashboard(jsonData) {
+                const dashboardContent = document.getElementById('dashboard-content');
+                dashboardContent.innerHTML = ''; // Clear existing content
+
+                if (!jsonData) {
+                    dashboardContent.innerHTML = `<p class="no-data">No data available</p>`;
+                    return;
+                }
+
+                // Assign JSON to currentJson
+                currentJson = jsonData; 
+                console.log("Loaded currentJson:", currentJson); // Debugging log
+
+                // Standardize file name
+                const originalFileName = jsonData.project_info?.ProjectCode || 'N/A';
+                const jsonFileName = originalFileName.endsWith('_inv.json') ? originalFileName : `${originalFileName}_inv.json`;
+
+                const projectInfo = `
+                    <div class="project-info">
+                        <div>
+                            <strong>Project Code:</strong> <span>${jsonData.project_info?.ProjectCode || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <strong>Project Name:</strong> <span>${jsonData.project_info?.ProjectName || 'N/A'}</span>
+                        </div>
+                        <div>
+                            <strong>Surveyor Name:</strong> <span>${jsonData.project_info?.SurveyorName || 'N/A'}</span>
+                        </div>
+                        <div class="action-buttons">
+                            <button class="btn btn-info" onclick="runAI('${jsonFileName}')">Run AI</button>
+                            <button class="btn btn-success bulk-update-btn" onclick="pushSelectedRows()" disabled>
+                                Update
+                            </button>
+                            <button class="btn btn-primary" onclick="compressProject('${jsonFileName}')">Download</button>
+                            <button class="btn btn-success" onclick="saveChanges('${jsonFileName}')">Save</button>
+                            <button class="btn btn-danger" onclick="pushToServer('${jsonFileName}')">Push</button>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+
+                dashboardContent.innerHTML += projectInfo;
+
+                // Sort taps by Tap No in ascending order
+                const taps = (jsonData.items?.Taps || []).sort((a, b) => {
+                    const tapNoA = parseInt(a['Tap No'], 10) || 0;
+                    const tapNoB = parseInt(b['Tap No'], 10) || 0;
+                    return tapNoA - tapNoB;
+                });
+
+                if (taps.length > 0) {
+                    let tableHtml = `
+                        <table class="taps-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="select-all" onclick="selectAllRows(this)">
+                                    </th>
+                                    <th>Tap No</th>
+                                    <th>Tap Condition</th>
+                                    <th>Photos</th>
+                                    <th>Flag</th>
+                                    <th>AI Tap Condition</th>
+                                    <th>AI Predictions</th>
+                                    <th>Bookmark</th>
+                                    <th>Comment</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                    `;
+
+                    taps.forEach((tap, index) => {
+                        // Extract all photo fields dynamically
+                        const photos = Object.keys(tap)
+                            .filter(key => key.match(/^Photo\d*$/) && tap[key])
+                            .map(key => tap[key]);
+
+                        // Generate flag icon with dynamic title
+                        const flagClass = tap.Flag === 'red' ? 'red' : tap.Flag === 'yellow' ? 'yellow' : tap.Flag === 'green' ? 'green' : '';
+                        const flagTitle = tap.Flag === 'red' ? 'Deviation observed' : tap.Flag === 'yellow' ? 'Photographic evidence may not contain all the features for prediction' : tap.Flag === 'green' ? 'No deviation observed' : 'No flag';
+
+                        const flagIcon = `
+                            <span 
+                                class="flag-icon ${flagClass}" 
+                                title="${flagTitle}">
+                            </span>
+                        `;
+
+                        tableHtml += `
+                            <tr>
+                                <td><input type="checkbox" class="select-row" data-index="${index}" onchange="toggleUpdateButton()"></td>
+                                <td>${tap['Tap No'] || 'N/A'}</td>
+                                <td>
+                                    <input type="text" value="${tap['Tap Condition'] || ''}" 
+                                           onchange="updateJson(${index}, 'Tap Condition', this.value)">
+                                </td>
+                                <td>
+                                    ${photos.length > 0 ? `
+                                        <div style="display: flex; align-items: center; justify-content: center;">
+                                            <button onclick="prevImage(this)" 
+                                                    class="photo-nav-button prev-button" 
+                                                    style="margin-right: 10px;" 
+                                                    disabled>⟨</button>
+                                            <a href="${photos[0]}" target="_blank">
+                                                <img src="${photos[0]}" alt=" " class="thumbnail" 
+                                                     data-photos='${JSON.stringify(photos)}' 
+                                                     data-index="0">
+                                            </a>
+                                            <button onclick="nextImage(this)" 
+                                                    class="photo-nav-button next-button" 
+                                                    style="margin-left: 10px;" 
+                                                    ${photos.length === 1 ? 'disabled' : ''}>⟩</button>
+                                        </div>
+                                    ` : `<span>No photos available</span>`}
+                                </td>
+                                <td>${flagIcon}</td>
+                                <td>${tap['AI Tap Condition'] || ''}</td>
+                                <td class="pre-wrap">${tap['AI Predictions'] || ''}</td>
+                                <td>
+                                    <input type="checkbox" ${tap.Bookmark === 'yes' ? 'checked' : ''} 
+                                           onchange="updateJson(${index}, 'Bookmark', this.checked ? 'yes' : 'no')">
+                                </td>
+                                <td>
+                                    <textarea placeholder="Add comment..." 
+                                              oninput="updateJson(${index}, 'Comment', this.value)">
+                                        ${tap.Comment || ''}
+                                    </textarea>
+                                </td>
+                                <td>
+                                    <button class="btn btn-push-row" onclick="pushSingleRow(${index})">
+                                        Update
+                                    </button>
+                                </td>
+                            </tr>
+                        `;
+                    });
+
+                    tableHtml += `
+                            </tbody>
+                        </table>
+                    `;
+
+                    dashboardContent.innerHTML += tableHtml;
+
+                } else {
+                    dashboardContent.innerHTML += `<p class="no-data">No taps data available.</p>`;
+                }
+            }
+
+
+        function processRow(index) {
+                showOverlay(); // Show overlay during AI processing
+
+                fetch('/process-row', { // Replace with the actual endpoint
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ row_index: index })
+                })
+                    .then(response => response.json())
+                    .then(() => {
+                        const jsonFileName = 'temp_project.json'; // Replace with your JSON file name
+                        checkForUpdates(jsonFileName); // Start polling for updates
+                    })
+                    .catch(error => {
+                        hideOverlay(); // Hide overlay on error
+                        console.error('Error processing row:', error);
+                    });
+            }
+
+            function checkForUpdates(jsonFileName) {
+                const interval = setInterval(() => {
+                    fetch(`/check-updates?file=${encodeURIComponent(jsonFileName)}`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.updated) {
+                                clearInterval(interval);
+                                hideOverlay(); // Hide overlay after updates
+                                location.reload(); // Reload the page to show updated data
+                            }
+                        })
+                        .catch(error => {
+                            clearInterval(interval);
+                            hideOverlay(); // Hide overlay on error
+                            console.error('Error checking for updates:', error);
+                        });
+                }, 2000); // Poll every 2 seconds
+            }
+
+
+
+            function showOverlay() {
+                const overlay = document.getElementById('overlay');
+                if (overlay) {
+                    overlay.style.display = 'flex'; // Show overlay
+                    console.log('Overlay displayed'); // Debugging
+                }
+            }
+
+            function hideOverlay() {
+                const overlay = document.getElementById('overlay');
+                if (overlay) {
+                    overlay.style.display = 'none'; // Hide overlay
+                    console.log('Overlay hidden'); // Debugging
+                }
+            }
+
+
+            
+
+
+
+        function prevImage(button) {
+            const container = button.closest('div');
+            const imageElement = container.querySelector('.thumbnail');
+            const photos = JSON.parse(imageElement.getAttribute('data-photos'));
+            let currentIndex = parseInt(imageElement.getAttribute('data-index'), 10);
+
+            if (currentIndex > 0) {
+                currentIndex--;
+                imageElement.src = photos[currentIndex];
+                imageElement.setAttribute('data-index', currentIndex);
+
+                container.querySelector('.next-button').removeAttribute('disabled');
+            }
+
+            if (currentIndex === 0) {
+                button.setAttribute('disabled', true);
+            }
+        }
+
+        function nextImage(button) {
+            const container = button.closest('div');
+            const imageElement = container.querySelector('.thumbnail');
+            const photos = JSON.parse(imageElement.getAttribute('data-photos'));
+            let currentIndex = parseInt(imageElement.getAttribute('data-index'), 10);
+
+            if (currentIndex < photos.length - 1) {
+                currentIndex++;
+                imageElement.src = photos[currentIndex];
+                imageElement.setAttribute('data-index', currentIndex);
+
+                container.querySelector('.prev-button').removeAttribute('disabled');
+            }
+
+            if (currentIndex === photos.length - 1) {
+                button.setAttribute('disabled', true);
+            }
+        }
+
+
+
+        function updateJson(index, key, value) {
+            if (currentJson.items.Taps[index]) {
+                currentJson.items.Taps[index][key] = value;
+            }
+        }
+
+        // function saveChanges(fileName) {
+        //     console.log(`saveChanges called for: ${fileName}`);
+
+        //     // Ensure the currentJson data is valid before proceeding
+        //     if (!currentJson || Object.keys(currentJson).length === 0) {
+        //         alert("No data available to save.");
+        //         return;
+        //     }
+
+            
+
+        //     fetch('/save-json', {
+        //         method: 'POST',
+        //         headers: { 'Content-Type': 'application/json' },
+        //         body: JSON.stringify({
+        //             file_name: fileName, // Pass the exact file name
+        //             updated_data: currentJson // Ensure this contains the modified JSON data
+        //         }),
+        //     })
+        //     .then(response => response.json())
+        //     .then(data => {
+        //         if (data.success) {
+        //             alert(data.message || "Changes saved successfully.");
+        //             console.log(`Changes saved successfully for: ${fileName}`);
+
+        //             // Call compressProject after save operation succeeds
+        //             const projectCode = fileName.replace(/_inv\.json$/, '').replace(/\.json$/, '');
+        //             compressProject(projectCode); // Pass derived projectCode directly
+        //         } else {
+        //             alert("Error saving changes: " + data.error);
+        //         }
+        //     })
+        //     .catch(error => {
+        //         console.error("Error saving changes:", error);
+        //     });
+        // }
+
+        function saveChanges(fileName) {
+            console.log(`saveChanges called for: ${fileName}`);
+
+            // Ensure the currentJson data is valid before proceeding
+            if (!currentJson || Object.keys(currentJson).length === 0) {
+                alert("No data available to save.");
+                return;
+            }
+
+            fetch('/save-json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    file_name: fileName,
+                    updated_data: currentJson, // Send the updated JSON data
+                }),
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || "Changes saved successfully.");
+                        console.log(`Changes saved successfully for: ${fileName}`);
+                    } else {
+                        alert("Error saving changes: " + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error("Error saving changes:", error);
+                });
+        }
+
+
+
+        function updateSelectedFile(fileName) {
+            console.log("Selected file:", fileName); // Debugging log
+
+            // Call the loadJson function to process the selected file
+            loadJson(fileName);
+        }
+
+
+        function compressProject(projectCode) {
+            console.log(`CompressProject called for: ${projectCode}`);
+
+            // Derive the JSON file path based on the project code
+            const jsonFileName = `${projectCode}_inv.json`;
+            const jsonFilePath = `./json_reports/${jsonFileName}`;
+
+            fetch(`/compress-project/${projectCode}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ json_file_path: jsonFilePath }), // Pass the JSON file path
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || "Project compressed successfully.");
+                        console.log(`Project compressed successfully for: ${projectCode}`);
+                    } else {
+                        alert("Error compressing project: " + (data.message || "unknown error"));
+                    }
+                })
+                .catch(error => console.error("Error compressing project:", error));
+        }
+
+
+
+
+
+        function pushToServer(fileName) {
+            fetch(`/push-project/${fileName}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message || "Project pushed successfully."))
+                .catch(error => console.error("Error pushing project:", error));
+        }
+
+        function showPhoto(photoPath) {
+            console.log("Photo path before assignment:", photoPath);
+            const modal = document.getElementById("photo-modal");
+            const modalImage = document.getElementById("photo-image");
+
+            if (modal && modalImage) {
+                modalImage.src = photoPath; // Assign photoPath to src
+                console.log("Assigned photoPath to src:", modalImage.src);
+                modal.classList.add("show"); // Show the modal
+            } else {
+                console.error("Modal or modal image not found!");
+            }
+        }
+
+
+
+
+
+        function closePhotoModal() {
+            const modal = document.getElementById("photo-modal");
+            if (modal) {
+                modal.classList.remove("show"); // Hide the modal by removing the 'show' class
+            } else {
+                console.error("Modal not found!");
+            }
+        }
+
+
+        function runAI(fileName) {
+            console.log(`Run AI called for: ${fileName.trim()}`);
+            showOverlay(); // Ensure overlay is shown before initiating the request
+            fetch(`/run-ai/${fileName.trim()}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || "AI processing completed successfully.");
+                        // Reload JSON data to show updates
+                        loadJson(fileName.trim());
+                    } else {
+                        alert(data.error || "An error occurred while running AI.");
+                    }
+                })
+                .catch(error => {
+                    console.error("Error running AI:", error);
+                })
+                .finally(() => hideOverlay()); // Hide overlay once the process is complete
+        }
+
+
+        function pushSelectedRows() {
+        const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+        if (selectedCheckboxes.length === 0) {
+            alert('No rows selected for update.');
+            return;
+        }
+
+        selectedCheckboxes.forEach((checkbox) => {
+            const index = parseInt(checkbox.dataset.index, 10);
+            if (currentJson.items.Taps[index]) {
+                currentJson.items.Taps[index]['Tap Condition'] = currentJson.items.Taps[index]['AI Tap Condition'] || '';
+            }
+        });
+
+        alert(`${selectedCheckboxes.length} rows updated.`);
+        populateDashboard(currentJson); // Refresh the table
+    }
+
+        function selectAllRows(checkbox) {
+            const rowCheckboxes = document.querySelectorAll('.select-row');
+            rowCheckboxes.forEach(cb => {
+                cb.checked = checkbox.checked;
+            });
+            toggleUpdateButton(); // Update the bulk update button state
+        }
+
+        function toggleUpdateButton() {
+            const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+            const bulkUpdateButton = document.querySelector('.bulk-update-btn');
+
+            if (selectedCheckboxes.length > 0) {
+                bulkUpdateButton.disabled = false;
+                bulkUpdateButton.classList.add('highlight'); // Highlight when active
+            } else {
+                bulkUpdateButton.disabled = true;
+                bulkUpdateButton.classList.remove('highlight');
+            }
+        }
+
+
+
+
+            function pushSingleRow(index) {
+                if (currentJson.items.Taps[index]) {
+                    currentJson.items.Taps[index]['Tap Condition'] = currentJson.items.Taps[index]['AI Tap Condition'] || '';
+                    alert(`Row ${index + 1}: "Tap Condition" updated to "${currentJson.items.Taps[index]['Tap Condition']}"`);
+                    populateDashboard(currentJson); // Refresh the table
+                }
+            }
+
+        function pushSelectedRows() {
+            const selectedCheckboxes = document.querySelectorAll('.select-row:checked');
+            if (selectedCheckboxes.length === 0) {
+                alert('No rows selected for update.');
+                return;
+            }
+
+            selectedCheckboxes.forEach((checkbox) => {
+                const index = parseInt(checkbox.dataset.index, 10);
+                if (currentJson.items.Taps[index]) {
+                    currentJson.items.Taps[index]['Tap Condition'] = currentJson.items.Taps[index]['AI Tap Condition'] || '';
+                }
+            });
+
+            alert(`${selectedCheckboxes.length} rows updated.`);
+            populateDashboard(currentJson); // Refresh the table
+        }
+
+
+
+
+
+        document.addEventListener("click", (event) => {
+        const modal = document.getElementById("photo-modal");
+        const modalContent = document.getElementById("photo-image");
+
+        if (
+            modal &&
+            modal.classList.contains("show") && // Ensure the modal is visible
+            !modalContent.contains(event.target) && // Ensure the click is outside the content
+            event.target !== modalContent
+        ) {
+            closePhotoModal();
+        }
+    });
+
+
+
+    </script>
+</head>
+<body>
+
+    <div id="overlay">
+    <div class="progress-container">
+        <div class="progress-blocks">
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+            <div class="block"></div>
+        </div>
+        <div class="progress-text">
+            <span>AI Running...</span>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+    <div class="dashboard-container">
+    <div class="header">
+        <div class="user-details">
+            <h1>{{ full_name }}</h1>
+            <p>Department: {{ department }}</p>
+        </div>
+        <div class="logout-section">
+            <a href="/edit-account" class="account-edit">Edit Account</a>
+            <a href="/logout" class="logout-button">Logout</a>
+        </div>
+    </div>
+    <div id="top-section" class="main-content">
+        <div class="file-upload-section">
+            <!-- Upload Form and Overview Section -->
+            <h2>Upload .swmz File</h2>
+            <form id="uploadForm" method="POST" action="/upload-file" enctype="multipart/form-data">
+                <input type="file" name="file" accept=".swmz" required>
+                <button type="submit">Upload</button>
+            </form>
+            <div class="overview-section">
+                <div class="overview-item">Uploaded: <span id="uploadedCount">0</span></div>
+                <div class="overview-item">Working: <span id="workingCount">0</span></div>
+                <div class="overview-item">Completed: <span id="completedCount">0</span></div>
+            </div>
+
+            <div class="uploaded-files-section">
+                <h3>Uploaded Files</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <!-- <th>Uploaded By</th> -->
+                            <th>Owner</th>
+                            <!-- <th>Shared Users</th> -->
+                            <th>Date & Time</th>
+                            <th>Share</th>
+                            <th>Unshare</th>
+                            <th>Delete</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in uploaded_files %}
+                        <tr>
+                            <!-- File Name -->
+                            <td>
+                                <a href="#" onclick="updateSelectedFile('{{ file[0] }}')">{{ file[0] }}</a>
+                            </td>
+
+                            <!-- File Status -->
+                            <td>{{ file[1] }}</td>
+
+                            <!-- Uploaded By -->
+                            <!-- <td>{{ file[2] }}</td> -->
+
+                            <!-- File Owner -->
+                            <td>{{ file_owner[file[0]] }}</td>
+
+                            <!-- Shared Users -->
+                            <!-- <td>
+                                {% for user in shared_users[file[0]] %}
+                                {{ user }}
+                                {% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </td> -->
+
+                            <!-- Date & Time -->
+                            <td>{{ file[3] }}</td>
+
+                            <!-- Share File -->
+                            <td>
+                                {% if full_name == file_owner[file[0]] %}
+                                    <form action="/share-file/{{ file[0] }}" method="POST" style="display:inline;">
+                                        <select name="shared_user" class="share-dropdown" required>
+                                            <option value="" disabled selected>Share with</option>
+                                            {% for user in all_users %}
+                                            {% if user != full_name and user not in shared_users[file[0]] %}
+                                            <option value="{{ user }}">{{ user }}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-primary">Share</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-primary" disabled>Share</button>
+                                {% endif %}
+                            </td>
+
+
+                                                        <!-- Unshare File -->
+                            <td>
+                                {% if full_name == file_owner[file[0]] %}
+                                    <form action="/unshare-file/{{ file[0] }}" method="POST" style="display:inline;">
+                                        <select name="unshared_user" class="unshare-dropdown" required>
+                                            <option value="" disabled selected>Unshare with</option>
+                                            {% for shared_user in shared_users[file[0]] %}
+                                            {% if shared_user != file_owner[file[0]] %}
+                                            <option value="{{ shared_user }}">{{ shared_user }}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <button type="submit" class="btn btn-warning">Unshare</button>
+                                    </form>
+                                {% else %}
+                                    <button class="btn btn-warning" disabled>Unshare</button>
+                                {% endif %}
+                            </td>
+                            <!-- Delete File -->
+                            <td>
+                                {% if full_name == file_owner[file[0]] %}
+                                    <form action="/delete-file/{{ file[0] }}" method="POST" style="display:inline;"
+                                          onsubmit="return confirm('Are you sure you want to delete the file {{ file[0] }}?');">
+                                        <button type="submit" class="delete-icon">
+                                            <i class="fa fa-trash"></i>
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <button class="delete-icon" disabled>
+                                        <i class="fa fa-trash"></i>
+                                    </button>
+                                {% endif %}
+                            </td>
+
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="hamburger-bar-container">
+    <button id="panel-toggle" class="hamburger-bar">☰ Menu</button>
+    </div>
+   
+    <div id="dashboard-content" class="right-section">
+        <p class="no-data">No data available</p>
+    </div>
+</div>
+
+
+    <!-- Photo Modal -->
+<!-- <div id="photo-modal" class="modal">
+    <span class="close" onclick="closePhotoModal()">&times;</span>
+    <img id="photo-image" class="modal-content" alt="Expanded view">
+</div> -->
+
+
+<script>
+
+    document.getElementById("uploadForm").addEventListener("submit", function (event) {
+    event.preventDefault(); // Prevent default form submission
+
+    const formData = new FormData(this); // Collect form data
+
+    fetch("/upload-file", {
+        method: "POST",
+        body: formData,
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.success); // Display success message
+                location.reload(); // Reload to refresh file list
+            } else if (data.error) {
+                alert(`Error: ${data.error}`); // Display server error
+            } else {
+                alert("Unexpected response from the server.");
+            }
+        })
+        .catch(error => {
+            console.error("Error uploading file:", error);
+            alert("An unexpected error occurred. Please try again.");
+        });
+});
+
+
+
+
+    
+    // document.getElementById("uploadForm").addEventListener("submit", function (event) {
+    //     event.preventDefault(); // Prevent the default form submission
+
+    //     const formData = new FormData(this); // Collect form data
+
+    //     fetch("/upload-file", {
+    //         method: "POST",
+    //         body: formData,
+    //     })
+    //         .then((response) => {
+    //             if (response.status === 409) {
+    //                 // Handle Conflict (File already uploaded)
+    //                 return response.json().then((data) => {
+    //                     alert(`Error: ${data.error}`); // Display the error message
+    //                 });
+    //             } else if (!response.ok) {
+    //                 // Handle other errors
+    //                 throw new Error(`Server error: ${response.status}`);
+    //             }
+    //             return response.json(); // Parse successful responses
+    //         })
+    //         .then((data) => {
+    //             if (data.success) {
+    //                 alert(`Success: ${data.success}`); // Show success message
+    //                 location.reload(); 
+    //             }
+    //         })
+    //         .catch((error) => {
+    //             alert("An unexpected error occurred. Please try again.");
+    //             console.error("Error uploading file:", error);
+    //         });
+    // });
+
+
+    document.addEventListener("DOMContentLoaded", () => {
+    const scrollArrow = document.getElementById("scroll-arrow");
+
+    // Show/Hide scroll arrow based on scroll position
+    window.addEventListener("scroll", () => {
+        if (window.scrollY > 50) { // Lower threshold for testing
+            scrollArrow.classList.add("show");
+        } else {
+            scrollArrow.classList.remove("show");
+        }
+    });
+
+    // Handle scroll button click
+    scrollArrow.addEventListener("click", () => {
+        const isScrollingUp = scrollArrow.querySelector("i").classList.contains("fa-chevron-up");
+
+        if (isScrollingUp) {
+            window.scrollTo({ top: 0, behavior: "smooth" }); // Scroll to top
+            scrollArrow.querySelector("i").classList.remove("fa-chevron-up");
+            scrollArrow.querySelector("i").classList.add("fa-chevron-down");
+        } else {
+            window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); // Scroll to bottom
+            scrollArrow.querySelector("i").classList.remove("fa-chevron-down");
+            scrollArrow.querySelector("i").classList.add("fa-chevron-up");
+        }
+    });
+});
+
+
+
+
+</script>
+
+ <!-- Floating Scroll Arrow -->
+<div id="scroll-arrow" class="scroll-arrow">
+    <i class="fa fa-chevron-up"></i>
+</div>
+
+
+
+</body>
+</html>

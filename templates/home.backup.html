@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='home.css') }}">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        .dashboard-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .main-content {
+            flex: 2;
+            overflow: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .right-section {
+            flex: 1;
+            overflow: auto;
+            padding: 10px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+
+        .top-section {
+            display: block; /* Ensure it is visible when expanded */
+            height: auto;   /* Allow dynamic height adjustment */
+            transition: height 0.3s ease; /* Smooth height transition */
+        }
+
+        .upload-section {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            max-width: 500px;
+            box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .upload-section h2 {
+            font-size: 20px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+
+        .file-upload {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .file-upload input[type="file"] {
+            flex: 1;
+            margin-right: 10px;
+        }
+
+        .file-upload button {
+            padding: 8px 15px;
+            font-size: 14px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            transition: background-color 0.3s ease;
+        }
+
+        .file-upload button:hover {
+            background-color: #0056b3;
+        }
+
+        .overview-section {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .overview-item {
+            background-color: #e9ecef;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            padding: 10px;
+            flex: 1;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .overview-item:last-child {
+            margin-right: 0;
+        }
+
+        .overview-item strong {
+            display: block;
+            font-size: 14px;
+            color: #333;
+        }
+
+        .uploaded-files-section {
+            margin-top: 20px;
+            position: relative;
+        }
+
+        .uploaded-files-container {
+            max-height: 150px; /* Adjust to fit 3 rows */
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background-color: #f9f9f9;
+        }
+
+        .uploaded-files-container.expanded {
+            max-height: none; /* Allow full expansion */
+        }
+
+        .uploaded-files-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .uploaded-files-container table thead {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .uploaded-files-container table th,
+        .uploaded-files-container table td {
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+
+        .panel-toggle {
+            display: block;
+            margin: 10px auto 0;
+            text-align: center;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #007bff;
+            color: white;
+            width: 100%;
+            height: 30px;
+            line-height: 30px;
+            border: none;
+            border-radius: 4px;
+            outline: none;
+            transition: background-color 0.3s ease;
+        }
+
+        .panel-toggle:hover {
+            background-color: #0056b3;
+        }
+
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ddd;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .btn {
+            padding: 5px 10px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            border-radius: 3px;
+            transition: background-color 0.3s ease;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #0056b3;
+        }
+
+        .btn-success {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background-color: #218838;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #b02a37;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #999;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.8);
+        }
+
+        .modal-content {
+            margin: auto;
+            display: block;
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 10px;
+        }
+
+        .close {
+            position: absolute;
+            top: 15px;
+            right: 35px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        .close:hover,
+        .close:focus {
+            color: #bbb;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .collapsed #top-section {
+            flex: 0 0 0;
+            display: none;
+        }
+
+        .collapsed #dashboard-content {
+            flex: 1 1 auto;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .thumbnail {
+            max-width: 100px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const toggleButton = document.getElementById("panel-toggle");
+        const topSection = document.getElementById("top-section");
+        const dashboardContent = document.getElementById("dashboard-content");
+
+        // Restore panel state from localStorage on page load
+        const panelState = localStorage.getItem("panelState");
+        if (panelState === "collapsed") {
+            topSection.style.display = "none";
+            toggleButton.innerHTML = "▲";
+        } else {
+            topSection.style.display = "block";
+            toggleButton.innerHTML = "▼";
+        }
+
+        // Toggle panel and save state
+        toggleButton.addEventListener("click", () => {
+            if (topSection.style.display === "none") {
+                // Expand
+                topSection.style.display = "block";
+                toggleButton.innerHTML = "▼";
+                localStorage.setItem("panelState", "expanded");
+            } else {
+                // Collapse
+                topSection.style.display = "none";
+                toggleButton.innerHTML = "▲";
+                localStorage.setItem("panelState", "collapsed");
+            }
+        });
+
+        
+
+        // Fetch overview data dynamically
+            fetchOverviewData();
+        });
+
+        function fetchOverviewData() {
+            console.log("Fetching overview data..."); // Debugging log
+            fetch("/get-overview-data")
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error("Failed to fetch overview data");
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log("Overview data fetched:", data); // Debugging log
+                    if (data.error) {
+                        console.error("Error:", data.error);
+                        return;
+                    }
+                    // Populate the counts
+                    document.getElementById("uploadedCount").textContent = data.uploaded || 0;
+                    document.getElementById("workingCount").textContent = data.working || 0;
+                    document.getElementById("completedCount").textContent = data.completed || 0;
+                    document.getElementById("totalCount").textContent = data.total || 0;
+                })
+                .catch(error => console.error("Error fetching overview data:", error));
+        }
+
+
+
+        function loadJson(fileName) {
+        fileName = fileName.split('_inv.json')[0]; // Standardize the file name
+        fetch(`/get-json/${fileName}`)
+            .then(response => response.json())
+        .then(data => {
+            populateDashboard(data);
+        })
+        .catch(error => {
+            console.error("Error loading JSON data:", error);
+        });
+        }
+
+
+        function populateDashboard(jsonData) {
+            const dashboardContent = document.getElementById('dashboard-content');
+            dashboardContent.innerHTML = ''; // Clear existing content
+
+            if (!jsonData) {
+                dashboardContent.innerHTML = `<p class="no-data">No data available</p>`;
+                return;
+            }
+
+            // Assign JSON to currentJson
+            currentJson = jsonData; 
+            console.log("Loaded currentJson:", currentJson); // Debugging log
+
+            // Standardize file name
+            const originalFileName = jsonData.project_info?.ProjectCode || 'N/A';
+            const jsonFileName = originalFileName.endsWith('_inv.json') ? originalFileName : `${originalFileName}_inv.json`;
+
+            const projectInfo = `
+                <div class="project-info">
+                    <div><strong>Project Code:</strong> ${jsonData.project_info?.ProjectCode || 'N/A'}</div>
+                    <div><strong>Project Name:</strong> ${jsonData.project_info?.ProjectName || 'N/A'}</div>
+                    <div><strong>Surveyor Name:</strong> ${jsonData.project_info?.SurveyorName || 'N/A'}</div>
+                    <div class="action-buttons">
+                        <button class="btn btn-success" onclick="saveChanges('${jsonFileName}')">Save</button>
+                        <button class="btn btn-primary" onclick="compressProject('${jsonFileName}')">Download</button>
+                        <button class="btn btn-danger" onclick="pushToServer('${jsonFileName}')">Push</button>
+                    </div>
+                </div>
+                <hr>
+            `;
+            dashboardContent.innerHTML += projectInfo;
+
+            const taps = jsonData.items?.Taps || [];
+            if (taps.length > 0) {
+                let tableHtml = `
+                    <table class="taps-table">
+                        <thead>
+                            <tr>
+                                <th>Tap No</th>
+                                <th>Tap Condition</th>
+                                <th>Photo</th>
+                                <th>AI Tap Condition</th>
+                                <th>AI Predictions</th>
+                                <th>Bookmark</th>
+                                <th>Comment</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+
+                taps.forEach((tap, index) => {
+                    const normalizePath = (path) => {
+                        if (!path) return '/static/images/no_photo.png';
+                        return path.replace(/^extracted_data\/extracted_data\//, 'extracted_data/');
+                    };
+
+                    const photo1 = normalizePath(tap.Photo1);
+
+                    tableHtml += `
+                        <tr>
+                            <td>${tap['Tap No'] || 'N/A'}</td>
+                            <td><input type="text" value="${tap['Tap Condition'] || ''}" onchange="updateJson(${index}, 'Tap Condition', this.value)"></td>
+                            <td>
+                                <img src="${photo1}" alt="Photo" class="thumbnail" onclick="showPhoto('${photo1}')">
+                            </td>
+                            <td>${tap['AI Tap Condition'] || ''}</td>
+                            <td>${tap['AI Predictions'] || ''}</td>
+                            <td><input type="checkbox" ${tap.Bookmark === 'yes' ? 'checked' : ''} onchange="updateJson(${index}, 'Bookmark', this.checked ? 'yes' : 'no')"></td>
+                            <td><textarea placeholder="Add comment..." oninput="updateJson(${index}, 'Comment', this.value)">${tap.Comment || ''}</textarea></td>
+                        </tr>
+                    `;
+                });
+
+                tableHtml += `
+                        </tbody>
+                    </table>
+                `;
+                dashboardContent.innerHTML += tableHtml;
+            } else {
+                dashboardContent.innerHTML += `<p class="no-data">No taps data available.</p>`;
+            }
+        }
+
+        function updateJson(index, key, value) {
+            if (currentJson.items.Taps[index]) {
+                currentJson.items.Taps[index][key] = value;
+            }
+        }
+
+        function saveChanges(fileName) {
+            console.log(`saveChanges called for: ${fileName}`);
+
+            // Ensure the currentJson data is valid before proceeding
+            if (!currentJson || Object.keys(currentJson).length === 0) {
+                alert("No data available to save.");
+                return;
+            }
+
+            fetch('/save-json', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    file_name: fileName, // Pass the exact file name
+                    updated_data: currentJson // Ensure this contains the modified JSON data
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert(data.message || "Changes saved successfully.");
+                    console.log(`Changes saved successfully for: ${fileName}`);
+
+                    // Call compressProject after save operation succeeds
+                    const projectCode = fileName.replace(/_inv\.json$/, '').replace(/\.json$/, '');
+                    compressProject(projectCode); // Pass derived projectCode directly
+                } else {
+                    alert("Error saving changes: " + data.error);
+                }
+            })
+            .catch(error => {
+                console.error("Error saving changes:", error);
+            });
+        }
+
+        function compressProject(projectCode) {
+            console.log(`CompressProject called for: ${projectCode}`);
+
+            fetch(`/compress-project/${projectCode}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert(data.message || "Project compressed successfully.");
+                        console.log(`Project compressed successfully for: ${projectCode}`);
+                    } else {
+                        alert("Error compressing project: " + (data.message || "unknown error"));
+                    }
+                })
+                .catch(error => console.error("Error compressing project:", error));
+        }
+
+
+
+        function pushToServer(fileName) {
+            fetch(`/push-project/${fileName}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => alert(data.message || "Project pushed successfully."))
+                .catch(error => console.error("Error pushing project:", error));
+        }
+
+        function showPhoto(photoPath) {
+            if (!photoPath) {
+                alert("No photo available.");
+                return;
+            }
+            const modal = document.getElementById("photo-modal");
+            const modalImage = document.getElementById("photo-image");
+            modalImage.src = photoPath;
+            modal.style.display = "block";
+        }
+
+        function closePhotoModal() {
+            const modal = document.getElementById("photo-modal");
+            modal.style.display = "none";
+        }
+    </script>
+</head>
+<body>
+
+    <div class="dashboard-container">
+    <div class="header">
+        <div class="user-details">
+            <h1>{{ full_name }}</h1>
+            <p>Department: {{ department }}</p>
+        </div>
+        <div class="logout-section">
+            <a href="/edit-account" class="account-edit">Edit Account</a>
+            <a href="/logout" class="logout-button">Logout</a>
+        </div>
+    </div>
+    <div id="top-section" class="main-content">
+        <div class="file-upload-section">
+            <!-- Upload Form and Overview Section -->
+                <h2>Upload .swmz File</h2>
+                <form id="uploadForm"   method="POST" action="/upload-file" enctype="multipart/form-data">
+                    <input type="file" name="file" accept=".swmz" required>
+                    <button type="submit">Upload</button>
+                </form>
+                <div class="overview-section">
+                <div class="overview-item">
+                    Uploaded: <strong id="uploadedCount">0</strong>
+                </div>
+                <div class="overview-item">
+                    Working: <strong id="workingCount">0</strong>
+                </div>
+                <div class="overview-item">
+                    Completed: <strong id="completedCount">0</strong>
+                </div>
+                <div class="overview-item">
+                    Total: <strong id="totalCount">0</strong>
+                </div>
+            </div>
+
+
+                <div class="uploaded-files-section">
+            <h3>Uploaded Files</h3>
+            <div id="uploadedFilesContainer" class="uploaded-files-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>File Name</th>
+                            <th>Status</th>
+                            <th>Uploaded By</th>
+                            <th>Date & Time</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for file in uploaded_files %}
+                        <tr>
+                            <td><a href="#" onclick="loadJson('{{ file[0] }}')">{{ file[0] }}</a></td>
+                            <td>{{ file[1] }}</td>
+                            <td>{{ file[2] }}</td>
+                            <td>{{ file[3] }}</td>
+                            <td>
+                                <form action="/delete-file/{{ file[0] }}" method="POST" style="display:inline;"
+                                    onsubmit="return confirm('Are you sure you want to delete the file {{ file[0] }}?');">
+                                    <button type="submit" class="delete-button btn btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <button id="toggleButton" class="panel-toggle">▼</button>
+        </div>
+
+        <div id="dashboard-content" class="right-section">
+            <p class="no-data">No data available</p>
+        </div>
+    </div>
+    <!-- Photo Modal -->
+    <div id="photo-modal" class="modal">
+        <span class="close" onclick="closePhotoModal()">&times;</span>
+        <img id="photo-image" class="modal-content">
+    </div>
+
+</div> <!-- Close your dashboard-container -->
+<!-- Photo Modal -->
+<div id="photo-modal" class="modal">
+    <span class="close" onclick="closePhotoModal()">&times;</span>
+    <img id="photo-image" class="modal-content">
+</div>
+
+<script>
+    document.getElementById("uploadForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // Prevent the default form submission
+
+        const formData = new FormData(this); // Collect form data
+
+        fetch("/upload-file", {
+            method: "POST",
+            body: formData,
+        })
+            .then((response) => {
+                if (response.status === 409) {
+                    // Handle Conflict (File already uploaded)
+                    return response.json().then((data) => {
+                        alert(`Error: ${data.error}`); // Display the error message
+                    });
+                } else if (!response.ok) {
+                    // Handle other errors
+                    throw new Error(`Server error: ${response.status}`);
+                }
+                return response.json(); // Parse successful responses
+            })
+            .then((data) => {
+                if (data.success) {
+                    alert(`Success: ${data.success}`); // Show success message
+                    location.reload(); 
+                }
+            })
+            .catch((error) => {
+                alert("An unexpected error occurred. Please try again.");
+                console.error("Error uploading file:", error);
+            });
+    });
+
+
+</script>
+</body>
+</html>

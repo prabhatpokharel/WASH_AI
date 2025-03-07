@@ -1,0 +1,591 @@
+/* General Styles */
+body {
+    font-family: 'Roboto', Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: #f8f9fc;
+    color: #333;
+    box-sizing: border-box;
+}
+
+/* Table Styling */
+table {
+    width: 90%;
+    margin: 20px auto;
+    border-collapse: collapse;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+thead th {
+    background-color: #007bff;
+    color: #fff;
+    text-align: center;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: bold;
+    border-bottom: 2px solid #ddd;
+}
+
+tbody td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    vertical-align: middle;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tbody tr:hover {
+    background-color: #f1f4f9;
+}
+
+td {
+    white-space: nowrap;
+    word-wrap: break-word;
+    box-sizing: border-box;
+}
+
+/* Thumbnail Images */
+.thumbnail {
+    width: 60px;
+    height: 60px;
+    border-radius: 5px;
+    object-fit: cover;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: block;
+    margin: 0 auto;
+}
+
+.thumbnail:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* Inputs and Textareas */
+input[type="text"], textarea {
+    width: calc(100% - 16px);
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    font-size: 14px;
+    resize: none;
+    box-sizing: border-box;
+}
+
+textarea {
+    height: 60px;
+}
+
+input[type="checkbox"] {
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+/* Buttons */
+button {
+    padding: 8px 15px;
+    font-size: 14px;
+    color: #fff;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+button:hover {
+    background-color: #0056b3;
+    transform: translateY(-2px);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+/* Actions Container */
+.actions-container {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Header Section */
+.header {
+    background: linear-gradient(90deg, #007bff, #0056b3);
+    color: white;
+    padding: 20px;
+    border-radius: 10px 10px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.user-details h1 {
+    margin: 0;
+    font-size: 28px;
+    font-weight: bold;
+}
+
+.user-details p {
+    margin: 5px 0 0;
+    font-size: 16px;
+}
+
+.logout-section a {
+    color: white;
+    text-decoration: none;
+    margin: 5px 10px;
+    padding: 8px 15px;
+    border: 1px solid white;
+    border-radius: 20px;
+    font-size: 14px;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+.logout-section a:hover {
+    background-color: white;
+    color: #007bff;
+}
+
+/* File Upload Section */
+.file-upload-section {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.file-upload-section h2 {
+    margin-bottom: 15px;
+    font-size: 20px;
+    font-weight: bold;
+    color: #333;
+}
+
+.file-upload input[type="file"] {
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin-right: 10px;
+}
+
+.file-upload button {
+    padding: 10px 20px;
+    font-size: 14px;
+    color: white;
+    background-color: #007bff;
+    border: none;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.file-upload button:hover {
+    background-color: #0056b3;
+}
+
+/* Push Button */
+.btn-push-row {
+    background-color: #28a745;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 5px 10px;
+    font-size: 12px;
+    cursor: pointer;
+    display: none; /* Hidden by default */
+}
+
+.btn-push-row:hover {
+    background-color: #218838;
+}
+
+/* Show Push Button on Row Hover */
+tr:hover .btn-push-row {
+    display: inline-block; /* Show on hover */
+}
+
+/* Bulk Push Button */
+.btn-bulk-push {
+    background-color: #007bff;
+    color: #fff;
+    border: none;
+    border-radius: 3px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    margin: 10px 0;
+}
+
+.btn-bulk-push:hover {
+    background-color: #0056b3;
+}
+
+/* Selection Checkbox */
+.select-row {
+    cursor: pointer;
+    margin: 0 auto;
+}
+
+.bulk-update-btn.highlight {
+    background-color: #28a745; /* Green highlight */
+    color: #fff;
+    border: none;
+    cursor: pointer;
+}
+
+.bulk-update-btn:disabled {
+    background-color: #d6d6d6;
+    cursor: not-allowed;
+}
+
+
+/* Overview Section */
+.overview-section {
+    display: flex;
+    justify-content: space-between;
+    margin: 20px auto;
+    text-align: center;
+    width: 90%;
+}
+
+.overview-item {
+    flex: 1;
+    margin: 0 10px;
+    padding: 15px;
+    background-color: #f1f4f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.overview-item span {
+    font-size: 18px;
+    font-weight: bold;
+    color: #007bff;
+}
+
+/* Floating Buttons */
+.floating-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    z-index: 1000;
+}
+
+.floating-btn:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+/* Embedded Toggle Button */
+.toggle-btn {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    top: -20px; /* Adjust as needed to position it within the panel */
+    background-color: rgba(0, 123, 255, 0.8); /* Slightly transparent */
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    z-index: 10; /* Ensure it stays above other elements */
+    font-size: 14px;
+}
+
+/* Toggle Button Hover Effects */
+.toggle-btn:hover {
+    background-color: rgba(0, 86, 179, 0.9); /* Darker and slightly less transparent */
+    transform: translateX(-50%) scale(1.05); /* Slight zoom effect */
+}
+
+//* Hamburger Bar Container */
+.hamburger-bar-container {
+    position: sticky; /* Keeps it in place when scrolling */
+    top: 0; /* Stick it at the top */
+    left: 0;
+    width: 100%; /* Full width across the x-axis */
+    z-index: 1000; /* Ensure it stays on top of other elements */
+    background-color: #007bff; /* Background color for the bar */
+    box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.15); /* Even shadow on top and bottom */
+    padding: 0; /* Remove padding completely */
+    margin: 0; /* Ensure no margins interfere */
+}
+
+/* Hamburger Bar Button */
+.hamburger-bar {
+    display: inline-block; /* Allow centering */
+    padding: 10px 0; /* Vertical padding for the button */
+    width: 100%; /* Stretch the button to fit the container */
+    text-align: center; /* Center the text */
+    font-size: 14px; /* Smaller font size */
+    font-weight: bold; /* Make text bold */
+    color: white;
+    background-color: transparent; /* Transparent background */
+    border: none; /* Remove default button border */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+/* Hover Effect */
+.hamburger-bar:hover {
+    background-color: #007bff; /* Darken on hover */
+}
+
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .hamburger-bar {
+        font-size: 12px; /* Adjust font size for smaller screens */
+        padding: 8px 0;
+    }
+}
+
+/* Floating Scroll Arrow */
+.scroll-arrow {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    background-color: #007bff;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    transition: background-color 0.3s ease, transform 0.2s ease, opacity 0.3s ease;
+    z-index: 10000; /* Ensure it's above other elements */
+    opacity: 0; /* Hidden by default */
+    visibility: hidden; /* Prevent interaction */
+}
+
+.scroll-arrow.show {
+    opacity: 1;
+    visibility: visible;
+}
+
+.scroll-arrow i {
+    font-size: 20px;
+}
+
+.scroll-arrow:hover {
+    background-color: #0056b3;
+    transform: scale(1.1);
+}
+
+
+.pre-wrap {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+
+.photo-nav-button {
+    font-size: 16px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #007bff;
+    transition: color 0.3s ease;
+}
+
+.photo-nav-button:disabled {
+    color: #ccc;
+    cursor: not-allowed;
+}
+
+.photo-nav-button:hover:not(:disabled) {
+    color: #0056b3;
+}
+
+.thumbnail {
+    width: 100px;
+    height: auto;
+    cursor: pointer;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    transition: box-shadow 0.3s ease;
+}
+
+.thumbnail:hover {
+    box-shadow: 0 0 8px rgba(0, 123, 255, 0.5);
+}
+
+
+.flag-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-start;
+    width: 24px; /* Icon size */
+    height: 16px; /* Icon size */
+    position: relative;
+    margin: 0 auto; /* Center alignment */
+    cursor: help; /* Help cursor on hover */
+}
+
+.flag-icon::before {
+    content: '';
+    display: block;
+    width: 2px; /* Pole width */
+    height: 100%; /* Pole height */
+    background-color: #444; /* Pole color */
+    margin-right: 4px; /* Space between pole and flag */
+}
+
+.flag-icon::after {
+    content: '';
+    display: block;
+    width: 20px; /* Flag width */
+    height: 12px; /* Flag height */
+    background-color: var(--flag-color, transparent); /* Dynamic flag color */
+    clip-path: polygon(0% 0%, 100% 0%, 90% 50%, 100% 100%, 0% 100%); /* Waving shape */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2); /* Subtle shadow */
+}
+
+.flag-icon.red::after {
+    --flag-color: #ff4c4c; /* Red for alerts */
+}
+
+.flag-icon.yellow::after {
+    --flag-color: #ffd700; /* Yellow for warnings */
+}
+
+.flag-icon.green::after {
+    --flag-color: #4caf50; /* Green for OK */
+}
+
+.flag-icon[title]:hover::after {
+    transform: scale(1.1); /* Slight scaling on hover */
+}
+
+
+/* Project Info Alignment */
+.project-info {
+    width: 90%;
+    margin: 20px auto; /* Center align with vertical spacing */
+    padding: 15px; /* Add padding for better readability */
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    line-height: 1.5;
+    box-sizing: border-box; /* Ensure proper padding and width alignment */
+    font-size: 14px; /* Standard font size */
+    position: relative;
+}
+
+.project-info div {
+    margin-bottom: 10px; /* Add spacing between rows */
+}
+
+.project-info .action-buttons {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 10px; /* Add spacing between buttons */
+}
+
+/* General Overlay Styling */
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.85); /* Slightly darker for a clean look */
+    z-index: 9999;
+    display: none; /* Initially hidden */
+    justify-content: center;
+    align-items: center;
+    flex-direction: column; /* Align blocks and text vertically */
+}
+
+/* Progress Blocks Container */
+.progress-blocks {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Pulsating Blocks */
+.block {
+    width: 20px;
+    height: 20px;
+    background: linear-gradient(45deg, #007bff, #00d2ff);
+    border-radius: 4px;
+    animation: pulseBlock 1.5s infinite ease-in-out;
+}
+
+/* Stagger Animation Delays */
+.block:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.block:nth-child(2) {
+    animation-delay: 0.3s;
+}
+
+.block:nth-child(3) {
+    animation-delay: 0.6s;
+}
+
+.block:nth-child(4) {
+    animation-delay: 0.9s;
+}
+
+.block:nth-child(5) {
+    animation-delay: 1.2s;
+}
+
+/* Pulsating Animation */
+@keyframes pulseBlock {
+    0% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.5);
+        opacity: 1;
+    }
+    100% {
+        transform: scale(1);
+        opacity: 0.5;
+    }
+}
+
+/* Progress Text Styling */
+.progress-text {
+    color: white;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
